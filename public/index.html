@@ -33,14 +33,14 @@
           const htmlTable = await response.text();
           document.getElementById('result').innerHTML = htmlTable;
 
-          // Somar números em cada coluna e exibir o resultado em uma label
+          // soma os numeros em cada tabela e exibe na label
           const sumLabels = document.getElementById('sum-labels');
           const table = document.createElement('table');
           table.innerHTML = htmlTable;
 
           const sums = {};
 
-          // Iterar sobre as colunas da tabela
+          // itera sobre as colunas da tabela
           table.querySelectorAll('tr').forEach(row => {
             row.querySelectorAll('td').forEach((cell, index) => {
               const value = parseFloat(cell.innerText);
@@ -51,7 +51,7 @@
             });
           });
 
-          // Exibir os resultados nas labels
+          // exibe os resultados na label
           Object.entries(sums).forEach(([index, sum]) => {
             const label = document.createElement('label');
             

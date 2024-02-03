@@ -4,31 +4,31 @@ const xlsx = require('xlsx');
 const path = require('path');
 
 const app = express();
-const PORT = 16;
+const PORT = 54;
 
-// Configurar o multer para lidar com uploads
+// configurar o multer para lidar com uploads
 const armazenamento = multer.memoryStorage();
-const upload = multer({ armazenamento: armazenamento });
-// Adicione a seguinte linha de código ao processar as datas
-
-
+const upload = multer({ storage: armazenamento });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/upload', upload.single('excelFile'), (req, res) => {
   try {
-    // extrai o buffer do arquivo Excel enviado na req
+    // extrai o buffer do arquivo excel enviado na req
     const excelBuffer = req.file.buffer;
 
-    // lê o arquivo excel usando a biblioteca xlsx que foi importada no require
+    // lê o arquivo excel usando a biblioteca xlsx
     const leituraExcel = xlsx.read(excelBuffer, { type: 'buffer' });
-    // obtem os nomes das planilhas no arquivo Excel
     const sheet_name_list = leituraExcel.SheetNames;
+    const worksheet = leituraExcel.Sheets[sheet_name_list[0]];
+
     // converte a primeira planilha em um formato JSON
-    const conversorPlanilha = xlsx.utils.sheet_to_json(leituraExcel.Sheets[sheet_name_list[0]], { dateNF: 'dd/mm/yyyy' });
-
-
-
+    const conversorPlanilha = xlsx.utils.sheet_to_json(worksheet, {
+      raw: false,
+      defval: '',
+      header: 1,
+      dateNF: 'yyyy-mm-dd'
+    });
 
     let html_table = '<table class="table"><thead class="thead-dark"><tr>';
 
@@ -39,23 +39,25 @@ app.post('/upload', upload.single('excelFile'), (req, res) => {
 
     html_table += '</tr></thead><tbody>';
 
-
     // adiciona linhas
-// adiciona linhas
-conversorPlanilha.forEach(row => {
-  html_table += '<tr>';
-  Object.values(row).forEach(celula => {
-    html_table += `<td>${celula}</td>`;
-  });
-  html_table += '</tr>';
-});
-
+    conversorPlanilha.forEach(row => {
+      html_table += '<tr>';
+      Object.values(row).forEach(celula => {
+        // verifica se a celula eh uma data e converte
+        if (celula instanceof Date) {
+          html_table += `<td>${celula.toLocaleDateString()}</td>`;
+        } else {
+          html_table += `<td>${celula}</td>`;
+        }
+      });
+      html_table += '</tr>';
+    });
 
     html_table += '</tbody></table>';
 
     res.send(html_table);
   } catch (error) {
-    res.status(500).send('Erro no processamento do arquivo Excel.');
+    res.status(500).send(`Erro no processamento do arquivo Excel: ${error.message}`);
   }
 });
 
