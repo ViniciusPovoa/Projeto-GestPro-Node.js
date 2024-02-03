@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload de Arquivo Excel</title>
+  <!-- Adicione este link ao Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+</head>
+<body>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="excelFile" accept=".xls,.xlsx" required>
+    <button type="submit">Enviar</button>
+  </form>
+
+  <div id="result"></div>
+<!-- ... (código anterior) ... -->
+
+<script>
+    document.querySelector('form').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const formData = new FormData(this);
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const htmlTable = await response.text();
+          document.getElementById('result').innerHTML = htmlTable;
+
+          // Somar números em cada coluna e exibir o resultado em uma label
+          const sumLabels = document.getElementById('sum-labels');
+          const table = document.createElement('table');
+          table.innerHTML = htmlTable;
+
+          const sums = {};
+
+          // Iterar sobre as colunas da tabela
+          table.querySelectorAll('tr').forEach(row => {
+            row.querySelectorAll('td').forEach((cell, index) => {
+              const value = parseFloat(cell.innerText);
+
+              if (!isNaN(value)) {
+                sums[index] = (sums[index] || 0) + value;
+              }
+            });
+          });
+
+          // Exibir os resultados nas labels
+          Object.entries(sums).forEach(([index, sum]) => {
+            const label = document.createElement('label');
+            
+            label.textContent = `Soma da Coluna ${parseInt(index) + 1}: ${sum}`;
+            sumLabels.appendChild(label);
+          });
+
+        } else {
+          console.error('Erro no servidor:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error.message);
+      }
+    });
+  </script>
+<!-- Adicione este script para o Bootstrap JavaScript (opcional) -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-q3rKoM3jdEXziqTCpGzq7UewtQOp6HfZeqNOhA3zS3epf5EWtluZjyOQHVaUgTF" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+  
+
+  <div id="sum-labels"></div>
+</body>
+</html>
+
